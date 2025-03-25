@@ -17,12 +17,12 @@ def preprocess_frame(frame, img_size=640):
 
 # 간단한 자체 NMS 구현 (torchvision 제거)
 def simple_nms(boxes, scores, iou_threshold=0.5):
-    idxs = scores.argsort(descending=True)
+    idxs = scores.argsort(descending=True).view(-1)
     keep_boxes = []
 
     while idxs.numel() > 0:
-        current = idxs[0]
-        keep_boxes.append(current.item())
+        current = idxs[0].item()
+        keep_boxes.append(current)
 
         if idxs.numel() == 1:
             break
@@ -34,21 +34,27 @@ def simple_nms(boxes, scores, iou_threshold=0.5):
 
 # 바운딩 박스 IOU 계산 함수
 def box_iou(box1, box2):
-    # 교집합 영역 계산
-    x1 = torch.max(box1[:, 0], box2[:, 0])
-    y1 = torch.max(box1[:, 1], box2[:, 1])
-    x2 = torch.min(box1[:, 2], box2[:, 2])
-    y2 = torch.min(box1[:, 3], box2[:, 3])
+    """
+    box1: (1, 4), box2: (N, 4)
+    둘 다 [x1, y1, x2, y2] 형태라고 가정
+    """
+    # 교차 영역 좌표 계산
+    x1 = torch.max(box1[:, None, 0], box2[:, 0])
+    y1 = torch.max(box1[:, None, 1], box2[:, 1])
+    x2 = torch.min(box1[:, None, 2], box2[:, 2])
+    y2 = torch.min(box1[:, None, 3], box2[:, 3])
 
-    intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
+    # 교차 영역 넓이
+    inter = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
 
-    # 각 박스 면적
-    area1 = (box1[:, 2] - box1[:, 0]) * (box1[:, 3] - box1[:, 1])
-    area2 = (box2[:, 2] - box2[:, 0]) * (box2[:, 3] - box2[:, 1])
+    # 각 박스 넓이
+    area1 = (box1[:, 2] - box1[:, 0]) * (box1[:, 3] - box1[:, 1])  # (1,)
+    area2 = (box2[:, 2] - box2[:, 0]) * (box2[:, 3] - box2[:, 1])  # (N,)
 
-    union = area1 + area2 - intersection
+    # union
+    union = area1[:, None] + area2 - inter
 
-    return intersection / union
+    return inter / union  # shape: (1, N)
 
 # YOLO 자체 후처리
 def postprocess_yolo(predictions, orig_shape, conf_threshold=0.5, iou_threshold=0.5, img_size=640):
