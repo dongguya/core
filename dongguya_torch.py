@@ -117,14 +117,20 @@ while True:
 
     detections = postprocess_yolo(predictions, (orig_h, orig_w))
 
+    class_labels = ["default", "sitting", "lying"]
+
     for det in detections:
         x1, y1, x2, y2 = det["box"]
         conf = det["score"]
+        class_id = det["class"]
         keypoints = det["keypoints"]
 
         # 바운딩 박스 시각화
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
-        cv2.putText(frame, f"{conf:.2f}", (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+
+        # 클래스 라벨 + confidence 점수 시각화
+        label = f"{class_labels[class_id]}: {conf:.2f}"
+        cv2.putText(frame, label, (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
 
         # 키포인트 시각화
         for kp_x, kp_y, kp_conf in keypoints:
