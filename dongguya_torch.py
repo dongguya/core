@@ -52,7 +52,7 @@ def box_iou(box1, box2):
 
 # YOLO 자체 후처리
 def postprocess_yolo(predictions, orig_shape, conf_threshold=0.5, iou_threshold=0.5, img_size=640):
-    predictions = predictions.permute(0, 2, 1)[0]  # [8400, 79]
+    predictions = predictions.permute(0, 2, 1)[0]
 
     scores = predictions[:, 4]
     mask = scores > conf_threshold
@@ -63,8 +63,13 @@ def postprocess_yolo(predictions, orig_shape, conf_threshold=0.5, iou_threshold=
 
     boxes = predictions[:, :4]
     scores = predictions[:, 4]
-    classes = predictions[:, 5].int()
-    keypoints = predictions[:, 6:].reshape(-1, 24, 3)
+
+    # 클래스가 여러 개(3개)인 경우 처리법
+    class_scores = predictions[:, 5:8]  # 3개 클래스 점수
+    classes = class_scores.argmax(dim=1)
+
+    # 키포인트는 정확히 8번부터 끝까지
+    keypoints = predictions[:, 8:].reshape(-1, 24, 3)
 
     # xywh -> xyxy 변환
     boxes_xyxy = boxes.clone()
