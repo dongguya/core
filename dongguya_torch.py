@@ -74,31 +74,44 @@ while True:
     with torch.no_grad():
         predictions = model(input_tensor)
 
+        # 구조 및 shape를 정확히 확인
+        if isinstance(predictions, (tuple, list)):
+            print("출력은 tuple/list이며 길이는:", len(predictions))
+            for i, pred in enumerate(predictions):
+                if isinstance(pred, torch.Tensor):
+                    print(f"predictions[{i}] shape:", pred.shape)
+                else:
+                    print(f"predictions[{i}] type:", type(pred))
+        else:
+            print("predictions type:", type(predictions))
+            if isinstance(predictions, torch.Tensor):
+                print("predictions shape:", predictions.shape)
+
     # 6. 후처리
-    detections = postprocess_detections(predictions, (orig_h, orig_w))
+    # detections = postprocess_detections(predictions, (orig_h, orig_w))
 
     # 7. 결과 시각화 (바운딩박스 + 키포인트)
-    for det in detections:
-        x1, y1, x2, y2 = map(int, det["box"])
-        conf = det["score"]
-        cls = det["class"]
-        keypoints = det["keypoints"]
+    # for det in detections:
+    #     x1, y1, x2, y2 = map(int, det["box"])
+    #     conf = det["score"]
+    #     cls = det["class"]
+    #     keypoints = det["keypoints"]
 
-        # 바운딩 박스 표시
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        label = f"Class {cls}: {conf:.2f}"
-        cv2.putText(frame, label, (x1, y1 - 10), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    #     # 바운딩 박스 표시
+    #     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #     label = f"Class {cls}: {conf:.2f}"
+    #     cv2.putText(frame, label, (x1, y1 - 10), 
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-        # 키포인트 표시
-        for kp in keypoints:
-            kp_x, kp_y = map(int, kp)
-            cv2.circle(frame, (kp_x, kp_y), 3, (0, 0, 255), -1)
+    #     # 키포인트 표시
+    #     for kp in keypoints:
+    #         kp_x, kp_y = map(int, kp)
+    #         cv2.circle(frame, (kp_x, kp_y), 3, (0, 0, 255), -1)
 
     # 8. 영상 출력
-    cv2.imshow("Dog Pose Detection: default / sitting / lying", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    # cv2.imshow("Dog Pose Detection: default / sitting / lying", frame)
+    # if cv2.waitKey(1) & 0xFF == ord('q'):
+    #     break
 
 cap.release()
 cv2.destroyAllWindows()
