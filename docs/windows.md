@@ -1,4 +1,8 @@
-## 1. Windows 환경
+## Windows
+⚠️ WSL 환경에서 외장카메라 인식에 실패하여 Jetson Xavier에서 환경 세팅을 진행하였습니다. 
+<br/>
+⚠️ jetson-xavier.md 를 참고해주세요.
+
 ### ✅ **Python**
 - [download](https://www.python.org/downloads/)
 - version: Python3.12.3
@@ -62,5 +66,5 @@ Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
 Bus 001 Device 002: ID 0c45:6340 Microdia Camera
 Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
 ```
-## 2. Linux 환경
+
 
