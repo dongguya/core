@@ -10,9 +10,9 @@ if not cap.isOpened():
     print("Unable to open the camera.")
     exit()
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-cap.set(cv2.CAP_PROP_FPS, 10)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# cap.set(cv2.CAP_PROP_FPS, 60)
 
 while True:
     ret, frame = cap.read()
@@ -53,7 +53,7 @@ while True:
                     cv2.circle(frame, (kp_x, kp_y), 3, (0, 255, 0), -1)
 
     # 5. 결과 프레임 화면 출력
-    cv2.imshow("YOLO11n Dog Pose Detection: Classifying Default, Sitting, and Lying Postures", frame)
+    cv2.imshow("Dog Pose Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
