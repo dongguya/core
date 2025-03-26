@@ -1,6 +1,9 @@
 import cv2
 import torch
 import numpy as np
+import serial
+import serial.tools.list_ports
+import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = torch.jit.load("model/dongguya.torchscript", map_location=device)
@@ -91,6 +94,25 @@ def postprocess_yolo(preds, orig_shape, conf_threshold=0.5, iou_threshold=0.5, i
     return results
 
 
+def find_stm32_port():
+    ports = serial.tools.list_ports.comports()
+    for port in ports:
+        if ("STM" in port.description or 
+            "STLink" in port.description or
+            "ttyACM" in port.device or
+            "ttyUSB" in port.device):
+            return port.device
+    raise Exception("STM32 포트를 찾을 수 없습니다.")
+
+
+def send_command(cmd):
+    port = find_stm32_port()
+    ser = serial.Serial(port, 9600)
+    time.sleep(2)  # 보드 리셋 대기
+    ser.write((cmd + '\n').encode('utf-8'))
+    print(f"Sent: {cmd}")
+    ser.close()
+
 cap = cv2.VideoCapture(0)
 class_labels = ["default", "sitting", "lying"]
 
@@ -112,6 +134,8 @@ while cap.isOpened():
         conf = det["score"]
         cid = det["class"]
         kp = det["keypoints"]
+
+        cid and send_command("ON")
 
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(frame, f"{class_labels[cid]}: {conf:.2f}", (x1, y1 - 10),

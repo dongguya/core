@@ -18,5 +18,10 @@ sudo apt install python3-pip
 ( jetpack v5.1.5에 맞는 최신 안정화 버전 ) 
 ```bash
 # sudo apt show nvidia-jetpack 명령어로 jetpack 버전 확인 -> 5.1.5-b11
-sudo pip install ~/Download/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl
+pip install ~/Download/torch-2.0.0+nv23.05-cp38-cp38-linux_aarch64.whl
+```
+
+### ☑️ **pyserial**
+```bash
+pip install pyserial
 ```
