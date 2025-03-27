@@ -33,3 +33,11 @@ pip install pyserial
 sudo setfacl -m u:nvidia:rw /dev/ttyACM0
 ```
 
+### ✅ **pygame**  
+게임 개발 및 멀티미디어 작업을 위한 파이썬 라이브러리.  
+2D 게임을 빠르게 만들 수 있고, 사운드 및 입력 장치 처리도 지원함.
+
+```bash
+pip install pygame
+```
+🚀 version: pygame-2.6.1
