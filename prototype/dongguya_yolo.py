@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 # 1. 모델 불러오기 (YOLO Pose 모델)
-model = YOLO("model/dongguya.pt")
+model = YOLO("../model/dongguya.pt")
 
 # 2. 카메라 열기
 cap = cv2.VideoCapture(0)

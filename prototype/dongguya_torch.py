@@ -6,7 +6,7 @@ import serial.tools.list_ports
 import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = torch.jit.load("model/dongguya.torchscript", map_location=device)
+model = torch.jit.load("../model/dongguya.torchscript", map_location=device)
 model.eval()
 
 
