@@ -16,6 +16,7 @@ def send_command():
     port = find_stm32_port()
     ser = serial.Serial(port, 9600)
     time.sleep(2)
+    # ser.write(("ON" + "\n").encode("utf-8"))
     ser.write(b'1')
     print("✅ 간식 지급")
     ser.close()

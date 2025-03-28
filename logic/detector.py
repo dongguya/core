@@ -11,11 +11,11 @@ class_labels = ["default", "sitting", "lying"]
 command_config = {
     "앉아": {
         "label": 1,
-        "audios": ["sitting1.mp3", "sitting2.mp3"]
+        "audios": ["sitting1.mp3", "sitting2.mp3", "sitting2.mp3", "sitting1.mp3"]
     },
     "엎드려": {
         "label": 2,
-        "audios": ["lying1.mp3", "lying2.mp3"]
+        "audios": ["lying1.mp3", "lying2.mp3", "lying2.mp3", "lying1.mp3"]
     }
 }
 
@@ -25,7 +25,7 @@ def choose_command():
         speak(audio)
     return command, command_config[command]["label"]
 
-def detect_and_verify(cap, target_label_id, hold_sec=3, timeout_sec=60):
+def detect_and_verify(cap, target_label_id, hold_sec=1, timeout_sec=60):
     start_time = None
     training_start_time = time.time()
     while time.time() - training_start_time < timeout_sec:
@@ -64,7 +64,7 @@ def detect_and_verify(cap, target_label_id, hold_sec=3, timeout_sec=60):
             start_time = None
 
         if os.environ.get("DISPLAY"):
-            cv2.imshow("훈련 중", frame)
+            cv2.imshow("Dog Pose Detection", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 return False
             
