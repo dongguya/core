@@ -19,15 +19,16 @@ TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 def load_engine(engine_path):
     with open(engine_path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
         return runtime.deserialize_cuda_engine(f.read())
-
+    
+cuda.init()
 engine = load_engine(MODEL_PATH)
 context = engine.create_execution_context()
 
 # 2. CUDA I/O 메모리 설정
 input_shape = (1, 3, IMG_SIZE, IMG_SIZE)
 output_shape = (1, (4 + NUM_CLASSES + NUM_KEYPOINTS * 3), 8400)  # (1, 79, 8400)
-input_nbytes = np.prod(input_shape) * np.float32().nbytes
-output_nbytes = np.prod(output_shape) * np.float32().nbytes
+input_nbytes = int(np.prod(input_shape) * np.float32().nbytes)
+output_nbytes = int(np.prod(output_shape) * np.float32().nbytes)
 
 d_input = cuda.mem_alloc(input_nbytes)
 d_output = cuda.mem_alloc(output_nbytes)
