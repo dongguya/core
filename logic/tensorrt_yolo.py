@@ -5,7 +5,8 @@ import pycuda.driver as cuda
 import tensorrt as trt
 
 # 설정값
-ENGINE_PATH = os.path.join("model", "dongguya.engine")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "model", "dongguya.engine")
 IMG_SIZE = 640
 NUM_KEYPOINTS = 24
 NUM_CLASSES = 3
@@ -18,7 +19,7 @@ def load_engine(engine_path):
     with open(engine_path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
         return runtime.deserialize_cuda_engine(f.read())
 
-engine = load_engine(ENGINE_PATH)
+engine = load_engine(MODEL_PATH)
 context = engine.create_execution_context()
 
 # 2. CUDA I/O 메모리 설정
