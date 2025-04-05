@@ -4,7 +4,7 @@ import random
 import time
 import cv2
 from utils.audio import speak
-from logic.yolo import model, preprocess_frame, postprocess_yolo
+from logic.torch_yolo import model, preprocess_frame, postprocess_yolo
 
 class_labels = ["default", "sitting", "lying"]
 
