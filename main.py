@@ -13,7 +13,6 @@ def show_live_preview(cap):
         cv2.imshow("Dog Pose Detection", frame)
         key = cv2.waitKey(1)
         if key & 0xFF == ord('s'):
-            cv2.destroyWindow("Dog Pose Detection")
             break
         elif key & 0xFF == ord('q'):
             cap.release()
