@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import pycuda.driver as cuda
 import tensorrt as trt
-import ctypes
 import atexit  # context 정리용
 
 # 설정값
@@ -41,7 +40,7 @@ output_nbytes = int(np.prod(output_shape) * np.float32().nbytes)
 
 d_input = cuda.mem_alloc(input_nbytes)
 d_output = cuda.mem_alloc(output_nbytes)
-bindings = [ctypes.c_void_p(d_input).value, ctypes.c_void_p(d_output).value]
+bindings = [int(d_input), int(d_output)]
 
 # 3. 프레임 전처리
 def preprocess_frame(frame):
