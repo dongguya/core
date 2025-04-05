@@ -4,6 +4,7 @@ import numpy as np
 import pycuda.driver as cuda
 import tensorrt as trt
 import ctypes
+import atexit  # context 정리용
 
 # 설정값
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,13 +16,21 @@ NUM_CLASSES = 3
 # TensorRT 로깅
 TRT_LOGGER = trt.Logger(trt.Logger.WARNING)
 
+# 0. CUDA 초기화 및 context 생성
+cuda.init()
+device = cuda.Device(0)  # Jetson은 GPU 하나만 존재
+cuda_context = device.make_context()  # 이게 없으면 mem_alloc에서 에러 발생
+atexit.register(cuda_context.pop)    # 안전한 종료 시 context 반납
+
 # 1. 엔진 로딩
 def load_engine(engine_path):
     with open(engine_path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
         return runtime.deserialize_cuda_engine(f.read())
-    
-cuda.init()
+
 engine = load_engine(MODEL_PATH)
+if engine is None:
+    raise RuntimeError("TensorRT 엔진 로딩 실패")
+
 context = engine.create_execution_context()
 
 # 2. CUDA I/O 메모리 설정
@@ -32,7 +41,6 @@ output_nbytes = int(np.prod(output_shape) * np.float32().nbytes)
 
 d_input = cuda.mem_alloc(input_nbytes)
 d_output = cuda.mem_alloc(output_nbytes)
-
 bindings = [ctypes.c_void_p(d_input).value, ctypes.c_void_p(d_output).value]
 
 # 3. 프레임 전처리
@@ -42,9 +50,9 @@ def preprocess_frame(frame):
     img = img.astype(np.float32) / 255.0
     img = img.transpose(2, 0, 1)
     img = np.expand_dims(img, axis=0)
-    return img
+    return img.astype(np.float32, copy=False)  # dtype 명시
 
-# 4. 후처리 로직 (PyTorch 없이 NumPy로)
+# 4. 후처리
 def postprocess(output, orig_shape, conf_thres=0.5, iou_thres=0.5):
     preds = output.reshape((4 + NUM_CLASSES + NUM_KEYPOINTS * 3, 8400)).T  # (8400, 79)
     cls_conf = preds[:, 4:4 + NUM_CLASSES]
@@ -53,18 +61,18 @@ def postprocess(output, orig_shape, conf_thres=0.5, iou_thres=0.5):
     mask = cls_scores > conf_thres
     if not np.any(mask):
         return []
-    
+
     boxes = preds[mask, :4]
     scores = cls_scores[mask]
     classes = cls_ids[mask]
     keypoints = preds[mask, 4 + NUM_CLASSES:].reshape(-1, NUM_KEYPOINTS, 3)
-    
+
     # xywh → xyxy
     xy = boxes[:, :2] - boxes[:, 2:] / 2
     wh = boxes[:, :2] + boxes[:, 2:]
     boxes_xyxy = np.concatenate((xy, wh), axis=1)
 
-    # NMS (간단한 버전)
+    # 간단한 NMS
     keep = []
     idxs = scores.argsort()[::-1]
     while len(idxs) > 0:
@@ -91,7 +99,7 @@ def postprocess(output, orig_shape, conf_thres=0.5, iou_thres=0.5):
         })
     return results
 
-# NMS용 IoU 계산 (NumPy)
+# IoU 계산
 def compute_iou_np(box1, boxes2):
     x1 = np.maximum(box1[0], boxes2[:, 0])
     y1 = np.maximum(box1[1], boxes2[:, 1])
@@ -101,7 +109,7 @@ def compute_iou_np(box1, boxes2):
     area1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
     area2 = (boxes2[:, 2] - boxes2[:, 0]) * (boxes2[:, 3] - boxes2[:, 1])
     union = area1 + area2 - inter
-    return inter / union
+    return inter / (union + 1e-6)  # 0 나눗셈 방지
 
 # 5. 추론 함수
 def infer(frame):
@@ -109,6 +117,6 @@ def infer(frame):
     img_input = preprocess_frame(frame)
     cuda.memcpy_htod(d_input, img_input)
     context.execute_v2(bindings)
-    output = np.empty(output_shape, dtype=np.float32)
+    output = np.zeros(output_shape, dtype=np.float32)
     cuda.memcpy_dtoh(output, d_output)
     return postprocess(output, orig_shape)
