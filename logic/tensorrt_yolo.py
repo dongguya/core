@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pycuda.driver as cuda
 import tensorrt as trt
+import ctypes
 
 # 설정값
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,7 +32,7 @@ output_nbytes = np.prod(output_shape) * np.float32().nbytes
 d_input = cuda.mem_alloc(input_nbytes)
 d_output = cuda.mem_alloc(output_nbytes)
 
-bindings = [int(d_input), int(d_output)]
+bindings = [ctypes.c_void_p(d_input).value, ctypes.c_void_p(d_output).value]
 
 # 3. 프레임 전처리
 def preprocess_frame(frame):
