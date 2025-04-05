@@ -114,6 +114,7 @@ def compute_iou_np(box1, boxes2):
 def infer(frame):
     orig_shape = frame.shape[:2]
     img_input = preprocess_frame(frame)
+    img_input = np.ascontiguousarray(img_input, dtype=np.float32)
     cuda.memcpy_htod(d_input, img_input)
     context.execute_v2(bindings)
     output = np.zeros(output_shape, dtype=np.float32)
