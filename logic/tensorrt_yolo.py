@@ -133,3 +133,5 @@ def infer(frame):
     # 출력 확인
     print("[DEBUG] Output max:", output.max(), "min:", output.min(), "mean:", output.mean())
     print("[DEBUG] Output contains NaN:", np.isnan(output).any())
+
+    return postprocess(output, orig_shape)
