@@ -125,7 +125,8 @@ def infer(frame):
 
     cuda.memcpy_htod(d_input, img_input)
 
-    output = np.zeros(output_shape, dtype=np.float32)
+    output_dtype = trt.nptype(engine.get_binding_dtype(1))
+    output = np.zeros(output_shape, dtype=output_dtype)
     context.execute_v2(bindings)
 
     cuda.memcpy_dtoh(output, d_output)
