@@ -115,15 +115,21 @@ def infer(frame):
     img_input = preprocess_frame(frame)
     img_input = np.ascontiguousarray(img_input, dtype=np.float32)
 
-    context.set_binding_shape(0, input_shape)  # 필수!
+    context.set_binding_shape(0, input_shape)
+
+    print("[DEBUG] Input Shape to set:", input_shape)
+    print("[DEBUG] Actual binding shape:", context.get_binding_shape(0))
+
+    # 입력 버퍼 디버깅
+    print("[DEBUG] Input max:", img_input.max(), "min:", img_input.min(), "NaN:", np.isnan(img_input).any())
 
     cuda.memcpy_htod(d_input, img_input)
 
-    output = np.zeros(output_shape, dtype=np.float32)  # 선언 위치 이동
+    output = np.zeros(output_shape, dtype=np.float32)
     context.execute_v2(bindings)
+
     cuda.memcpy_dtoh(output, d_output)
 
-    # 디버깅용 (선택)
-    print(f"Output max: {output.max()}, min: {output.min()}, mean: {output.mean()}")
-
-    return postprocess(output, orig_shape)
+    # 출력 확인
+    print("[DEBUG] Output max:", output.max(), "min:", output.min(), "mean:", output.mean())
+    print("[DEBUG] Output contains NaN:", np.isnan(output).any())
