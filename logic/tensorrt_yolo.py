@@ -35,8 +35,12 @@ context = engine.create_execution_context()
 # 2. CUDA I/O 메모리 설정
 input_shape = (1, 3, IMG_SIZE, IMG_SIZE)
 output_shape = (1, (4 + NUM_CLASSES + NUM_KEYPOINTS * 3), 8400)  # (1, 79, 8400)
-input_nbytes = int(np.prod(input_shape) * np.float32().nbytes)
-output_nbytes = int(np.prod(output_shape) * np.float32().nbytes)
+
+input_dtype = trt.nptype(engine.get_binding_dtype(0))
+output_dtype = trt.nptype(engine.get_binding_dtype(1))
+
+input_nbytes = int(np.prod(input_shape) * np.dtype(input_dtype).itemsize)
+output_nbytes = int(np.prod(output_shape) * np.dtype(output_dtype).itemsize)
 
 d_input = cuda.mem_alloc(input_nbytes)
 d_output = cuda.mem_alloc(output_nbytes)
@@ -49,7 +53,7 @@ def preprocess_frame(frame):
     img = img.astype(np.float32) / 255.0
     img = img.transpose(2, 0, 1)
     img = np.expand_dims(img, axis=0)
-    return img.astype(np.float32, copy=False)
+    return img  # 여기서는 float32로 유지
 
 # 4. 후처리 함수
 def postprocess(output, orig_shape, conf_thres=0.5, iou_thres=0.5):
@@ -113,25 +117,22 @@ def compute_iou_np(box1, boxes2):
 def infer(frame):
     orig_shape = frame.shape[:2]
     img_input = preprocess_frame(frame)
-    img_input = np.ascontiguousarray(img_input, dtype=np.float32)
+    img_input = img_input.astype(input_dtype, copy=False)
+    img_input = np.ascontiguousarray(img_input)
 
     context.set_binding_shape(0, input_shape)
 
     print("[DEBUG] Input Shape to set:", input_shape)
     print("[DEBUG] Actual binding shape:", context.get_binding_shape(0))
-
-    # 입력 버퍼 디버깅
+    print("[DEBUG] Input dtype:", input_dtype)
+    print("[DEBUG] Output dtype:", output_dtype)
     print("[DEBUG] Input max:", img_input.max(), "min:", img_input.min(), "NaN:", np.isnan(img_input).any())
 
     cuda.memcpy_htod(d_input, img_input)
-
-    output_dtype = trt.nptype(engine.get_binding_dtype(1))
     output = np.zeros(output_shape, dtype=output_dtype)
     context.execute_v2(bindings)
-
     cuda.memcpy_dtoh(output, d_output)
 
-    # 출력 확인
     print("[DEBUG] Output max:", output.max(), "min:", output.min(), "mean:", output.mean())
     print("[DEBUG] Output contains NaN:", np.isnan(output).any())
 
