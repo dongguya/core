@@ -1,5 +1,6 @@
 # from logic.torch_detector import detect_and_verify, choose_command
-from logic.tensorrt_detector import detect_and_verify, choose_command
+# from logic.tensorrt_detector import detect_and_verify, choose_command
+from logic.detector import detect_and_verify, choose_command
 from utils.audio import speak
 from utils.arduino import send_command
 import pygame
